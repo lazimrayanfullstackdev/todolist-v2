@@ -7,22 +7,30 @@ const mongoose = require("mongoose");
 
 const app = express();
 
+//setting the view engine to use ejs
 app.set('view engine', 'ejs');
 
+//setting to use body-parser
 app.use(bodyParser.urlencoded({extended: true}));
+
+//setting to use static files i.e. css,image etc.
 app.use(express.static("public"));
 
+//connecting mongodb
 mongoose.connect('mongodb://127.0.0.1:27017/todolistDB', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
+//creating mongodb schema
 const itemsSchema =  new mongoose.Schema({
   name: String
 });
 
+//creating model using schema
 const Item = mongoose.model("Item",itemsSchema);
 
+//inserting document
 const item1 = new Item({
   name: "Pray"
 });
@@ -36,20 +44,31 @@ const item3 = new Item({
   name: "Face Fear"
 })
 
-const defaultItems = [item1,item2,item3];
+const item4 = new Item({
+  name: "Read"
+})
 
-Item.insertMany(defaultItems).then(function(item){
-  console.log("Inserted Items");
-}).catch(function(error){
-  console.log(error);
-});
+//inserting the items in an array
+const defaultItems = [item1,item2,item3,item4];
+
 
 app.get("/", function(req, res) {
 
-//const day = date.getDate();
-
-  res.render("list", {listTitle: "Today", newListItems: items});
-
+  //const day = date.getDate();
+  Item.find().then(function(items){
+    if(items.length === 0){
+      Item.insertMany(defaultItems).then(function(item){
+        console.log("Inserted Items");
+      }).catch(function(error){
+        console.log(error);
+      });
+      res.redirect("/");
+    }else{
+    res.render("list", {listTitle: "Today", newListItems: items});
+    }
+  }).catch(function(error){
+    console.log(error);
+  });
 });
 
 app.post("/", function(req, res){
