@@ -48,6 +48,13 @@ const item4 = new Item({
   name: "Read"
 })
 
+const listSchema = new mongoose.Schema({
+  name:String,
+  items: [itemsSchema]
+})
+
+const List = mongoose.model("List",listSchema);
+
 //inserting the items in an array
 const defaultItems = [item1,item2,item3,item4];
 
@@ -93,9 +100,23 @@ app.post("/delete",function(req, res){
   res.redirect("/");
 });
 
-app.get("/work", function(req,res){
-  res.render("list", {listTitle: "Work List", newListItems: workItems});
-});
+app.get("/:customListName",function(req, res){
+  const customListName = req.params.customListName;
+  List.findOne({name:customListName}).then(function(foundList){
+    if(!foundList){
+      const list = new List({
+        name: customListName,
+        items: defaultItems
+      });
+      list.save();
+      res.redirect("/"+customListName);
+    }else{
+      res.render("list",{listTitle: foundList.name, newListItems: foundList.items});
+    }
+  }).catch(function(error){
+    console.log(error);
+  });
+})
 
 app.get("/about", function(req, res){
   res.render("about");
